@@ -13,7 +13,7 @@ PLAYER_SHIP_SIZE :: 40;
 PLAYER_SHIP_COLOR : SDL_Color = .{ r=0xFF, g=0xFF, b=0xFF, a=0xFF };
 PLAYER_SHIP_CENTER : Vector2;
 // PLAYER_SHIP_SPEED :: 1.5;
-PLAYER_SHIP_ROTATION_SPEED :: .2;
+PLAYER_SHIP_ROTATION_SPEED :: .15;
 PLAYER_SHIP_VELOCITY : Vector2 = .{ 0, -1 }; // Test vector
 
 // Input stuff
@@ -27,6 +27,24 @@ DIR_KEY :: enum u8 {
 
 modify_player_ship_velocity :: (velocity: *Vector2, buttons: *bool, ship_speed: *float) {
 
+  if buttons[DIR_KEY.LEFT] {
+    cos_theta := cos(PLAYER_SHIP_ROTATION_SPEED);
+    sin_theta := sin(PLAYER_SHIP_ROTATION_SPEED);
+    rotated_x := velocity.x * cos_theta - velocity.y * sin_theta;
+    rotated_y := velocity.x * sin_theta + velocity.y * cos_theta;
+    velocity.x = rotated_x;
+    velocity.y = rotated_y;
+  }
+
+  if buttons[DIR_KEY.RIGHT] {
+    cos_theta := cos(-PLAYER_SHIP_ROTATION_SPEED);
+    sin_theta := sin(-PLAYER_SHIP_ROTATION_SPEED);
+    rotated_x := velocity.x * cos_theta - velocity.y * sin_theta;
+    rotated_y := velocity.x * sin_theta + velocity.y * cos_theta;
+    velocity.x = rotated_x;
+    velocity.y = rotated_y;
+  }
+  // Normalize velocity vector
 }
 
 prepare_player_ship :: (player_ship: *Vector2, center_x: float, center_y: float) {
@@ -51,6 +69,7 @@ set_render_draw_color :: (renderer: *SDL_Renderer, color: SDL_Color) {
 }
 
 render_player_ship :: (renderer: *SDL_Renderer, player_ship: *Vector2) {
+  // @TODO: is casting taxing? hehe, this might be stupid
   SDL_RenderDrawLine(renderer, cast(s32) player_ship[0].x, cast(s32) player_ship[0].y, cast(s32) player_ship[1].x, cast(s32) player_ship[1].y);
   SDL_RenderDrawLine(renderer, cast(s32) player_ship[1].x, cast(s32) player_ship[1].y, cast(s32) player_ship[2].x, cast(s32) player_ship[2].y);
   SDL_RenderDrawLine(renderer, cast(s32) player_ship[2].x, cast(s32) player_ship[2].y, cast(s32) player_ship[3].x, cast(s32) player_ship[3].y);
@@ -120,13 +139,6 @@ main :: () {
     // Frame counters
     frame_start_time = SDL_GetTicks();
 
-    // Set some stuff
-    // @TODO: This is stupid, but it's just a test
-    DIRECTION_KEYBOARD_STATE[DIR_KEY.UP] = false;
-    DIRECTION_KEYBOARD_STATE[DIR_KEY.DOWN] = false;
-    DIRECTION_KEYBOARD_STATE[DIR_KEY.LEFT] = false;
-    DIRECTION_KEYBOARD_STATE[DIR_KEY.RIGHT] = false;
-
     event : SDL_Event;
     while SDL_PollEvent(*event) {
       if event.type == {
@@ -134,16 +146,20 @@ main :: () {
           exit = true;
         case SDL_KEYUP;
           if event.key.keysym.sym == SDLK_ESCAPE exit = true;
+          if event.key.keysym.sym == SDLK_w DIRECTION_KEYBOARD_STATE[DIR_KEY.UP] = false;
+          if event.key.keysym.sym == SDLK_s DIRECTION_KEYBOARD_STATE[DIR_KEY.DOWN] = false;
+          if event.key.keysym.sym == SDLK_a DIRECTION_KEYBOARD_STATE[DIR_KEY.LEFT] = false;
+          if event.key.keysym.sym == SDLK_d DIRECTION_KEYBOARD_STATE[DIR_KEY.RIGHT] = false;
         case SDL_KEYDOWN;
-          if event.key.keysym.sym == SDLK_UP DIRECTION_KEYBOARD_STATE[DIR_KEY.UP] = true;
-          if event.key.keysym.sym == SDLK_DOWN DIRECTION_KEYBOARD_STATE[DIR_KEY.DOWN] = true;
-          if event.key.keysym.sym == SDLK_LEFT DIRECTION_KEYBOARD_STATE[DIR_KEY.LEFT] = true;
-          if event.key.keysym.sym == SDLK_RIGHT DIRECTION_KEYBOARD_STATE[DIR_KEY.RIGHT] = true;
+          if event.key.keysym.sym == SDLK_w DIRECTION_KEYBOARD_STATE[DIR_KEY.UP] = true;
+          if event.key.keysym.sym == SDLK_s DIRECTION_KEYBOARD_STATE[DIR_KEY.DOWN] = true;
+          if event.key.keysym.sym == SDLK_a DIRECTION_KEYBOARD_STATE[DIR_KEY.LEFT] = true;
+          if event.key.keysym.sym == SDLK_d DIRECTION_KEYBOARD_STATE[DIR_KEY.RIGHT] = true;
       }
     }
 
     // Simulate game loop
-    print("Frame duration: %\n", frame_duration);
+    // print("Frame duration: %\n", frame_duration);
     modify_player_ship_velocity(*PLAYER_SHIP_VELOCITY, DIRECTION_KEYBOARD_STATE.data, *player_ship_speed);
     move_player_ship(PLAYER_SHIP.data, PLAYER_SHIP_VELOCITY, player_ship_speed);
 
