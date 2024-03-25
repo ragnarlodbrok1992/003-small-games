@@ -1,59 +1,45 @@
 #import "Basic";
-#import "Window_Creation";
+#import "SDL";
+#import "String";
 
-Simp :: #import "Simp";
-Input :: #import "Input";
-
-GAME_WINDOW: Window_Type;
-WINDOW_WIDTH  : s32 = 1920;
-WINDOW_HEIGHT : s32 = 1080;
+GAME_NAME :: "Jaisteroids";
+WINDOW_WIDTH  : s32 = 1024;
+WINDOW_HEIGHT : s32 = 768;
 
 main :: () {
-  // Welcome - goodbye messages
-  print("Jaisteroids - alpha version.");
-  defer print("Goodbye");
+  // Initialize SDL
+  SDL_Init(SDL_INIT_VIDEO);
+  
 
-  #if OS == .WINDOWS {
-    Windows :: #import "Windows";
-    Windows.SetProcessDPIAware();
-    Windows.timeBeginPeriod(1);
+  // Create an application window with the following settings:
+  window := SDL_CreateWindow(GAME_NAME,
+    SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+    WINDOW_WIDTH, WINDOW_HEIGHT,
+    SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN);
+
+  // Check that the window was successfully created
+  if window == null {
+      // In the case that the window could not be made...
+      print("Could not create window: %\n", to_string(SDL_GetError()));
+      return;
   }
 
-  WANTED_MSAA :: 8;
-  GAME_WINDOW = create_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Jaisteroids", wanted_msaa = WANTED_MSAA);
-  msaa := Simp.prepare_window(GAME_WINDOW, wanted_msaa = WANTED_MSAA);
-  log("Wanted MSAA: %\nChosen MSAA: %", WANTED_MSAA, msaa);
-
-  WINDOW_WIDTH, WINDOW_HEIGHT = Simp.get_render_dimensions(GAME_WINDOW);
-  Simp.set_render_target(GAME_WINDOW, .LEFT_HANDED); // Idk if in 2D game it matters
-
-  ENGINE_QUIT := false;
-
-  while !ENGINE_QUIT {
-    // Input handling
-    Input.update_window_events();
-    for Input.events_this_frame {
-      if it.type == .QUIT then ENGINE_QUIT = true;
-
-      if it.type == {
-        case .KEYBOARD;
-          if it.key_pressed && it.key_code == .ESCAPE {
-            ENGINE_QUIT = true;
+  exit := false;
+  while !exit {
+      event : SDL_Event;
+      while SDL_PollEvent(*event) {
+          if event.type == {
+              case SDL_QUIT;
+                  exit = true;
+              case SDL_KEYUP;
+                  if event.key.keysym.sym == SDLK_ESCAPE exit = true;
           }
       }
-    }
-
-    // Simulate stuff
-
-    // Rest of the game loop
-    sleep_milliseconds(10);
-    reset_temporary_storage();
   }
-}
 
-#run {
-  #if OS == .WINDOWS {
-    WR :: #import "Windows_Resources";
-    WR.disable_runtime_console();
-  }
+  // Close and destroy the window
+  SDL_DestroyWindow(window);
+
+  // Clean up
+  SDL_Quit();
 }

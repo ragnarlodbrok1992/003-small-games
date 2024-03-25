@@ -7,3 +7,6 @@ games/jaisteroids/.build/
 games/jaisteroids/jaisteroids.exe
 games/jaisteroids/jaisteroids.pdb
 
+# DLLs
+SDL2.dll
+
