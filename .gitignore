@@ -2,3 +2,8 @@ build/
 tags
 vcvars.bat
 
+# Jaisteroids
+games/jaisteroids/.build/
+games/jaisteroids/jaisteroids.exe
+games/jaisteroids/jaisteroids.pdb
+
