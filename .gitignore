@@ -10,3 +10,8 @@ games/jaisteroids/jaisteroids.pdb
 # DLLs
 SDL2.dll
 
+# Hex Trade Game
+games/hex-trade-game/.build/
+games/hex-trade-game/main.exe
+games/hex-trade-game/main.pdb
+
